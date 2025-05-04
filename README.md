@@ -13,9 +13,8 @@
 ### Prep work
 
 1. [Create a new public GitHub Gist](https://gist.github.com/)
-2. [Create a token with the `gist` scope and copy it.](https://github.com/settings/tokens/new)
-3. [Create a Goodreads account](https://www.goodreads.com/user/sign_up)
-4. [Create an API for the Goodreads API](https://www.goodreads.com/api/keys)
+2. [Create a Goodreads account](https://www.goodreads.com/user/sign_up)
+3. Extract your Goodreads list id from the `My Books` tab
 
 ### Project setup
 
@@ -24,8 +23,7 @@
 3. Add the following environment variables:
   - **GIST_ID:** The ID of the gist you created above (`https://gist.github.com/amorriscode/`**`3f84910b524db4819ec2dc1063f632ab`**).
   - **GH_TOKEN:** The GitHub token generated above.
-  - **GOODREADS_KEY:** The API key for your Goodreads account.
-  - **GOODREADS_USER_ID:** The user ID for your Goodreads account (`https://www.goodreads.com/user/show/`**`5171404`**`-anthony`).
+  - **GOODREADS_LIST_ID:** The id of your GR list (`https://www.goodreads.com/review/list/`**`189727934`**`?ref=nav_mybooks`) 
 
 ## Inspiration
 

@@ -1,15 +1,12 @@
 require("dotenv").config();
-const { Octokit } = require("@octokit/rest");
 const wordwrap = require("wordwrap");
-const got = require('got');
-const { parseStringPromise } = require('xml2js');
-const get = require('lodash.get');
+const rssParser = require('rss-parser')
+const {Octokit} = require("@octokit/rest");
 
 const {
   GIST_ID: gistId,
   GH_TOKEN: githubToken,
-  GOODREADS_KEY: goodreadsKey,
-  GOODREADS_USER_ID: goodreadsUserId,
+  GOODREADS_LIST_ID: listId,
 } = process.env;
 
 const octokit = new Octokit({
@@ -18,33 +15,36 @@ const octokit = new Octokit({
 
 async function main() {
   const wrap = wordwrap(58);
+  const currentlyReadingListName = `currently-reading`;
 
   try {
-    const readShelf = await got(`https://www.goodreads.com/review/list/${goodreadsUserId}.xml?key=${goodreadsKey}&v=2&shelf=read&sort=date_read&per_page=1`);
-    const readingShelf = await got(`https://www.goodreads.com/review/list/${goodreadsUserId}.xml?key=${goodreadsKey}&v=2&shelf=currently-reading&sort=date_read&per_page=1`);
+    const parser = new rssParser({
+          customFields: {
+            item: ['user_shelves', `author_name`]
+          }
+        }
+    );
 
-    // Convert Goodreads data from XML to JSON
-    const parsedReadShelf = await parseStringPromise(readShelf.body);
-    const parsedReadingShelf = await parseStringPromise(readingShelf.body);
+    const feed = await parser.parseURL(
+        `https://www.goodreads.com/review/list_rss/${listId}`);
 
-    // Parse out the information required from Goodreads
-    const recentlyReadBook = get(parsedReadShelf, 'GoodreadsResponse.reviews[0].review[0].book[0]');
-    const recentlyReadTitle = get(recentlyReadBook, 'title_without_series[0]');
-    const recentlyReadAuthor = get(recentlyReadBook, 'authors[0].author[0].name[0]');
-
-    const currentlyReadingBook = get(parsedReadingShelf, 'GoodreadsResponse.reviews[0].review[0].book[0]');
-    const currentlyReadingTitle = get(currentlyReadingBook, 'title_without_series[0]');
-    const currentlyReadingAuthor = get(currentlyReadingBook, 'authors[0].author[0].name[0]');
+    const reading = feed.items
+    .sort(item => new Date(item.pubDate).getMilliseconds())
+    .find(item => item.user_shelves === currentlyReadingListName)
+    const read = feed.items
+    .sort(item => new Date(item.pubDate).getMilliseconds())
+    .find(item => !item.user_shelves)
 
     // Create data for currently reading; remove subtitle if it exists
-    const currentlyReading = currentlyReadingTitle && currentlyReadingAuthor
-      ? `Currently reading: ${currentlyReadingTitle.split(':'[0])} by ${currentlyReadingAuthor}\n`
-      : `I'm not reading anything at the moment.\n`
+    const currentlyReading = reading.title && reading.author_name
+        ? `Currently reading: ${reading.title.split(
+            ':'[0])} by ${reading.author_name}\n`
+        : `I'm not reading anything at the moment.\n`
 
     // Create data for recently read; remove subtitle if it exists
-    const recentlyRead = recentlyReadTitle && recentlyReadAuthor
-      ? `Recently read: ${recentlyReadTitle.split(':')[0]} by ${recentlyReadAuthor}`
-      : `I haven't read anything recently.`
+    const recentlyRead = read.title && read.author_name
+        ? `Recently read: ${read.title.split(':')[0]} by ${read.author_name}`
+        : `I haven't read anything recently.`
 
     // Update your gist
     await updateGist([wrap(currentlyReading), wrap(recentlyRead)]);
@@ -54,11 +54,10 @@ async function main() {
 }
 
 async function updateGist(readingStatus) {
-  
 
   let gist;
   try {
-    gist = await octokit.gists.get({ gist_id: gistId });
+    gist = await octokit.gists.get({gist_id: gistId});
   } catch (error) {
     console.error(`Unable to get gist\n${error}`);
   }
