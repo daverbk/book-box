@@ -25,20 +25,19 @@ async function main() {
         }
     );
 
-    const feed = await parser.parseURL(
-        `https://www.goodreads.com/review/list_rss/${listId}`);
+    const feed = await parser.parseURL(`https://www.goodreads.com/review/list_rss/${listId}`);
 
     const reading = feed.items
-    .sort(item => new Date(item.pubDate).getMilliseconds())
-    .find(item => item.user_shelves === currentlyReadingListName)
+      .sort(item => new Date(item.pubDate).getMilliseconds())
+      .find(item => item.user_shelves === currentlyReadingListName);
+
     const read = feed.items
-    .sort(item => new Date(item.pubDate).getMilliseconds())
-    .find(item => !item.user_shelves)
+      .sort(item => new Date(item.pubDate).getMilliseconds())
+      .find(item => !item.user_shelves);
 
     // Create data for currently reading; remove subtitle if it exists
     const currentlyReading = reading.title && reading.author_name
-        ? `Currently reading: ${reading.title.split(
-            ':'[0])} by ${reading.author_name}\n`
+        ? `Currently reading: ${reading.title.split(':'[0])} by ${reading.author_name}\n`
         : `I'm not reading anything at the moment.\n`
 
     // Create data for recently read; remove subtitle if it exists
