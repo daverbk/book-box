@@ -14,7 +14,7 @@ const octokit = new Octokit({
 });
 
 async function main() {
-  const wrap = wordwrap(58);
+  const wrap = wordwrap(54);
   const currentlyReadingListName = `currently-reading`;
 
   try {
@@ -37,16 +37,16 @@ async function main() {
 
     // Create data for currently reading; remove subtitle if it exists
     const currentlyReading = reading.title && reading.author_name
-        ? `Currently reading: ${reading.title.split(':'[0])} by ${reading.author_name}\n`
+        ? `⏳ Currently reading: ${reading.title.split(':'[0])} by ${reading.author_name}`
         : `I'm not reading anything at the moment.\n`
 
     // Create data for recently read; remove subtitle if it exists
     const recentlyRead = read.title && read.author_name
-        ? `Recently read: ${read.title.split(':')[0]} by ${read.author_name}`
+        ? `☑️ Recently read: ${read.title.split(':')[0]} by ${read.author_name}`
         : `I haven't read anything recently.`
 
     // Update your gist
-    await updateGist([wrap(currentlyReading), wrap(recentlyRead)]);
+    await updateGist([wrap(currentlyReading), wrap('-'.repeat(52)), wrap(recentlyRead)]);
   } catch (error) {
     console.error(`Unable to fetch Goodreads books\n${error}`)
   }
