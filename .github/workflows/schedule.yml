@@ -1,14 +1,18 @@
 on:
+  workflow_dispatch:
   schedule:
     - cron: '0 0 * * *'
+
 name: Update gist with latest reads
 jobs:
   update-gist:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@master
+
       - name: update-gist
-        uses: amorriscode/book-box@master
+        uses: ./
         env:
           GIST_ID: ${{ secrets.GIST_ID }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
